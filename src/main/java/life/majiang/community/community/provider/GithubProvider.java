@@ -17,13 +17,13 @@ import java.io.IOException;
 @Component
 public class GithubProvider {
 
-    //将交换后的access_token发送到GitHub上
+    //将交换后的access_token发送到GitHub上，并且接收到GitHub上返回的新的access_token
     public String getAccessToken(AccessTokenDTO accessTokenDTO){
         MediaType mediaType = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 
         //此处的json就是access_token（访问令牌）
-        //toJSONString将
+        //toJSONString将access_token转换为mediatypele类型，得到requestbody
         RequestBody body = RequestBody.create(mediaType, JSON.toJSONString(accessTokenDTO));
         //url就是GitHub所提供的地址
         Request request = new Request.Builder()
@@ -32,7 +32,9 @@ public class GithubProvider {
                 .build();
         // 上面是发送给GitHub，下面是获取GitHub的回应（回应一个新的形式的access_token和token_type）。
         try (Response response = client.newCall(request).execute()) {
+            //获取responsebody，其中包含access_token和token_type
             String string = response.body().string();
+            //截取access_token
             String token = string.substring(13, 53);
             return token;
         } catch (Exception e) {
@@ -45,20 +47,20 @@ public class GithubProvider {
     //使用访问令牌访问API后，获取GitHub返回的一个用户信息
     public GithubUser getUser(String accseeToken){
         OkHttpClient client = new OkHttpClient();
+        //使用访问令牌，获取用户信息
         Request request = new Request.Builder()
                 .url("https://api.github.com/user?access_token=" + accseeToken)
                 .build();
         try {
             Response response = client.newCall(request).execute();
+            //将得到的用户信息转换为string类型
             String string = response.body().string();
-            //自动转换成一个Java的类对象
+            //将string解自动转换成一个Java的类对象
             GithubUser githubUser = JSON.parseObject(string, GithubUser.class);
             return githubUser;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
-
     }
-
 }
