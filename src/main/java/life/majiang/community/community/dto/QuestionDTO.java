@@ -1,9 +1,11 @@
-package life.majiang.community.community.Model;
+package life.majiang.community.community.dto;
 
+import life.majiang.community.community.Model.User;
 import lombok.Data;
 
+// 比Question多了一个user，通过user来获取用户的头像。
 @Data
-public class Question {
+public class QuestionDTO {
     private Integer id; //问题的id
     private String title; //问题名称
     private String description; //问题描述
@@ -14,4 +16,5 @@ public class Question {
     private Integer viewCount; //观看数
     private Integer likeCount; //点赞数
     private String tags; //标签
+    private User user;
 }

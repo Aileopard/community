@@ -55,6 +55,7 @@ public class GithubProvider {
             Response response = client.newCall(request).execute();
             //将得到的用户信息转换为string类型
             String string = response.body().string();
+            //System.out.println(string);
             //将string解自动转换成一个Java的类对象
             GithubUser githubUser = JSON.parseObject(string, GithubUser.class);
             return githubUser;

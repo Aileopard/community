@@ -1,9 +1,9 @@
 package life.majiang.community.community.Controller;
 
 import life.majiang.community.community.Model.User;
+import life.majiang.community.community.Service.UserService;
 import life.majiang.community.community.dto.AccessTokenDTO;
 import life.majiang.community.community.dto.GithubUser;
-import life.majiang.community.community.mapper.UserMapper;
 import life.majiang.community.community.provider.GithubProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +24,9 @@ public class AuthorizeController {
     //这个用于将code和access_token交换，然后将其发送到GitHub上，来获取
     @Autowired
     private GithubProvider githubProvider;
+
     @Autowired
-    private UserMapper userMapper;
+    private UserService userService;
 
     //通过spring的一个value注解，@value会去配置文件中寻找到的值赋给clientID
     @Value("${github.client.id}")
@@ -59,10 +60,9 @@ public class AuthorizeController {
            user.setToken(token);
            user.setName(githubUser.getName());
            user.setAccountID(String.valueOf(githubUser.getId()));
-           //设置为当前时间
-           user.setGmtCreate(System.currentTimeMillis());
-           user.setGmtModified(user.getGmtCreate());
-           userMapper.insert(user);
+           user.setAvatarUrl(githubUser.getAvatar_url());
+           // 每次登录时要判断数据库中是否有该用户，如果有就更新，没有就插入到数据库中。
+           userService.createOrUpdate(user);
            //如果你不去创建一个cookie，它会自动给你一个
             //将token写入到cookie中去
             response.addCookie(new Cookie("token", token));
@@ -71,6 +71,19 @@ public class AuthorizeController {
         }else{
            // 登录失败，重新登录。
         }
+        return "redirect:/";
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request,
+                         HttpServletResponse response){
+        // 删除session
+        request.getSession().removeAttribute("githubUser");
+        // 删除cookie，其中cookie
+        Cookie cookie = new Cookie("token", null); //假如要删除名称为token的Cookie
+        cookie.setMaxAge(0);   //立即删除型
+        response.addCookie(cookie); // 重新写如，覆盖之前的cookie
+
         return "redirect:/";
     }
 }
